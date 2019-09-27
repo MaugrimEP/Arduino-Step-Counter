@@ -25,11 +25,54 @@ def read_data(filename):
 #Should return an array of timestamps from when steps were detected
 #Each value in this arrray should represent the time that step was made.
 def count_steps(timestamps, x_arr, y_arr, z_arr, m_arr):
-  #TODO: Actual implementation
+
+  #noise reduction : remove high noise frequencies
+  frequency_treshold = 3500000
+  mag_fft = np.fft.fft(m_arr)
+  for i in range(0,len(m_arr)):
+    if abs(mag_fft[i])>frequency_treshold:
+      mag_fft[i] = 0
+  m_arr = np.fft.ifft(mag_fft)
+
+  #2 - state machine
+  #initialize
+  current_state = "Middle"
+  timestamp = dict()
+  timestamp["Middle"] = None
+  timestamp["Up"] = None
+  timestamp["Down"] = None
+  threshold_up = 7500
+  threshold_down = -5500
+  minimum_time_steps = 150
+  #go through data
   rv = []
   for i, time in enumerate(timestamps):
-    if(i==0):
-      rv.append(time)
+    previous_state = current_state
+
+    #change state according to data
+    if m_arr[i]>threshold_up :
+      current_state = "Up"
+      timestamp["Down"] = None #force the dectection to begin with up
+    elif m_arr[i]<threshold_down :
+      current_state = "Down"
+    else :
+      current_state = "Middle"
+    #if we do changed state, save when we did
+    if(current_state != previous_state):
+      timestamp[current_state] = time
+
+    #if we've gone through all states, append the step
+    if timestamp["Middle"]!=None and timestamp["Up"]!=None and timestamp["Down"]!=None :
+      time_step = timestamp["Up"]
+
+      if len(rv)==0 or time_step - rv[-1] > minimum_time_steps:
+        rv.append(time_step)
+
+      #clean the timestamps
+      timestamp["Middle"] = None
+      timestamp["Up"] = None
+      timestamp["Down"] = None
+
   return rv
 
 #Calculate the magnitude of the given vector
@@ -82,4 +125,6 @@ def main(filename):
   visualize_data(timestamps, x_array,y_array,z_array,s_array,m_array)
 
 main("accelerometer_data.csv")
-
+main("accelerometer_data_easy.csv")
+main("accelerometer_data_medium.csv")
+main("accelerometer_data_very_hard.csv")
