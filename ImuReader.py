@@ -3,7 +3,7 @@ import struct
 import time
 
 #Open serial connection at /dev/ttyCOM11, at 2305400 baud (datarate from IMU)
-ser = serial.Serial('/dev/ttyACM3', 115200, timeout=2, xonxoff=False, rtscts=False, dsrdtr=False)
+ser = serial.Serial('/dev/ttyACM0', 115200, timeout=2, xonxoff=False, rtscts=False, dsrdtr=False)
 ser.flushInput()
 ser.flushOutput()
 
@@ -12,7 +12,7 @@ raw_data = ser.readline()
 ctr = 0
 start = int(round(time.time() * 1000))
 
-output = open("accelerometer_data.csv","a+")
+output = open("data/accelerometer_data.csv","a+")
 
 while True:
   rv = struct.unpack('h',ser.read(2))
