@@ -2,17 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #Simple function to visualize 4 arrays that are given to it
-def visualize_data(timestamps, x_arr,y_arr,z_arr,s_arr):
+def visualize_data(timestamps, x_arr,y_arr,z_arr,s_arr, m_arr):
   #Plotting accelerometer readings
   plt.figure(1)
   plt.plot(timestamps, x_arr, color = "blue",linewidth=1.0)
   plt.plot(timestamps, y_arr, color = "red",linewidth=1.0)
   plt.plot(timestamps, z_arr, color = "green",linewidth=1.0)
   plt.show()
-  #magnitude array calculation
-  m_arr = []
-  for i, x in enumerate(x_arr):
-    m_arr.append(magnitude(x_arr[i],y_arr[i],z_arr[i]))
   plt.figure(2)
   #plotting magnitude and steps
   plt.plot(timestamps, s_arr, color = "black",linewidth=1.0)
@@ -20,16 +16,15 @@ def visualize_data(timestamps, x_arr,y_arr,z_arr,s_arr):
   plt.show()
 
 #Function to read the data from the log file
-#TODO Read the measurements into array variables and return them
+#return [timestamps], [x_array], [y_array], [z_array]
 def read_data(filename):
-  #TODO implementation
-  #return [timestamps], [x_array], [y_array], [z_array]
-  return [0],[0],[0],[0]
+  data = np.loadtxt(filename, dtype='double,double,double,double', delimiter=';', usecols=(0, 1, 2, 3), unpack=True)
+  return data[0], data[1], data[2], data[3]
 
 #Function to count steps.
 #Should return an array of timestamps from when steps were detected
 #Each value in this arrray should represent the time that step was made.
-def count_steps(timestamps, x_arr, y_arr, z_arr):
+def count_steps(timestamps, x_arr, y_arr, z_arr, m_arr):
   #TODO: Actual implementation
   rv = []
   for i, time in enumerate(timestamps):
@@ -65,20 +60,26 @@ def check_data(t,x,y,z):
   print("The amount of data read from accelerometer is "+str(len(t))+" entries")
   return True
 
-def main():
+def main(filename):
   #read data from a measurement file
-  timestamps, x_array, y_array, z_array = read_data("accelerometer_data.csv")
+  timestamps, x_array, y_array, z_array = read_data(f"data/{filename}")
+
+  #magnitude array calculation
+  m_array = []
+  for i, x in enumerate(x_array):
+    m_array.append(magnitude(x_array[i],y_array[i],z_array[i]))
+
   #Chek that the data does not produce errors
   if(not check_data(timestamps, x_array,y_array,z_array)):
     return
   #Count the steps based on array of measurements from accelerometer
-  st = count_steps(timestamps, x_array, y_array, z_array)
+  st = count_steps(timestamps, x_array, y_array, z_array, m_array)
   #Print the result
   print("This data contains "+str(len(st))+" steps according to current algorithm")
   #convert array of step times into graph-compatible format
   s_array = generate_step_array(timestamps, st)
   #visualize data and steps
-  visualize_data(timestamps, x_array,y_array,z_array,s_array)
+  visualize_data(timestamps, x_array,y_array,z_array,s_array,m_array)
 
-main()
+main("accelerometer_data.csv")
 
